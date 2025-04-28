@@ -1,0 +1,77 @@
+import {
+  getAll,
+  getById,
+  create,
+  updateById,
+  deleteById,
+} from "../src/fsStore";
+import { setFS } from "./utils";
+import { mockFSData } from "./fixtures";
+
+describe("store", () => {
+  beforeEach(() => setFS(mockFSData));
+  afterEach(setFS);
+
+  describe("getAll", () => {
+    it("should return all messages", async () => {
+      const res = await getAll();
+      expect(res).toEqual([{ id: "0", message: "Hello, World!" }]);
+    });
+  });
+
+  describe("getById", () => {
+    it("should return undefined when not found", async () => {
+      const msg = await getById("Z");
+      expect(msg).toBeUndefined();
+    });
+
+    it("should return message when found", async () => {
+      const msg = await getById("0");
+      expect(msg).toEqual({ id: "0", message: "Hello, World!" });
+    });
+  });
+
+  describe("create", () => {
+    it("should return created message", async () => {
+      const msg = await create("Test Message");
+      expect(typeof msg.id).toBe("string");
+      expect(msg.message).toBe("Test Message");
+    });
+
+    it("should add message to db", async () => {
+      const txt = String(Math.random());
+      await create(txt);
+      const res = await getAll();
+      expect(res.find(({ message }) => message === txt)).toBeDefined();
+    });
+  });
+
+  describe("updateById", () => {
+    it("should return undefined when not found", async () => {
+      const msg = await updateById("Z", "");
+      expect(msg).toBeUndefined();
+    });
+
+    it("should return message when found", async () => {
+      const txt = String(Math.random());
+      const msg = await updateById("0", txt);
+      expect(msg).toEqual({
+        id: "0",
+        message: txt,
+      });
+    });
+  });
+
+  describe("deleteById", () => {
+    it("should return undefined", async () => {
+      const res = await deleteById("0");
+      expect(res).toBeUndefined();
+    });
+
+    it("should delete message from db", async () => {
+      await deleteById("0");
+      const msg = await getById("0");
+      expect(msg).toBeUndefined();
+    });
+  });
+});
