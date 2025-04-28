@@ -1,0 +1,22 @@
+name: Continous Integration
+on: [push]
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install dependencies
+        run: yarn
+      - name: Check code style
+        run: yarn lint
+      - name: Generate random JWT secret
+        id: generate-secret
+        run: echo "::set-output name=JWT_SECRET::$(openssl rand -base64 30)"
+        shell: bash
+      - name: Prepare environment
+        run: yarn docker:up
+      - name: Run tests
+        run: yarn test
+        env:
+          DB_CONN: mongodb://localhost:27017/whispering
+          JWT_SECRET: ${{ steps.generate-secret.outputs.JWT_SECRET }}
